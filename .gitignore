@@ -1,0 +1,10 @@
+#folder IDEA files
+.idea/
+build/
+#folder tokens
+tokens/
+#folder credential
+src/main/resources/
+#folder users file
+users.txt
+

@@ -3,12 +3,14 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class WorkWithTable {
-    public String getMonth(List<List<Object>> values, int max){
+    //returns the current month
+    public String getMonth(List<List<Object>> values, int tableLength){
         String month = "Month not found";
         if(values == null || values.isEmpty()){
             System.out.println("NO DATA FOUND");
         }else{
-            if (max>10) {
+            // can not work !!! need to test !!!
+            if (tableLength>10) {
                 month = values.get(0).get(5).toString();
             }else{
                 month = values.get(0).get(3).toString();
@@ -16,10 +18,11 @@ public class WorkWithTable {
         }
         return month;
     }
-
-    public String[] getStatuses(List<List<Object>> values, int max, int max2){
-        String statuses[] = new String[max2];
+    //returns last statuses
+    public String[] getStatuses(List<List<Object>> values, int lengthTable, int hightTable){
+        String statuses[] = new String[hightTable];
         String cell = "";
+
         if(values == null || values.isEmpty()){
             System.out.println("NO DATA FOUND");
         }else{
@@ -27,7 +30,7 @@ public class WorkWithTable {
             int count1 = 0;
             for (List row : values){
                 if (count > 1){
-                    cell = row.get(max).toString();
+                    cell = row.get(lengthTable).toString();
                     statuses[count1] = cell;
                     count1++;
                 }
@@ -37,9 +40,8 @@ public class WorkWithTable {
 
         return statuses;
     }
-
+    //returns timings
     public int[] getTimings(List<List<Object>> values, int max){
-        max = max-2;
         int timings[] = new int[max];
         if(values == null || values.isEmpty()){
             System.out.println("NO DATA FOUND");
@@ -50,13 +52,12 @@ public class WorkWithTable {
                     timings[count] = Integer.parseInt(row.get(2).toString());
                     count++;
                 }
-
             }
         }
         return timings;
     }
-
-    public int[] formattingTable(List<List<Object>> values){
+    //returns the size of the filled table
+    public int[] getTableSize(List<List<Object>> values){
         int tableSize[] = new int[2];
         List<String> statuses = new ArrayList<>();
         if(values == null || values.isEmpty()){
@@ -73,10 +74,10 @@ public class WorkWithTable {
                     count++;
                 }
             }
-            for (int i = count; i < valuesSize; i++){
+            for (int i=count; i<valuesSize; i++){
                 values.remove(count);
             }
-            tableSize[0] = count;
+            tableSize[0] = count - 2;
             valuesSize = values.size();
             int count2 = 50;
             int count3 = 0;
@@ -101,10 +102,11 @@ public class WorkWithTable {
                 count3++;
             }
             count2++;
-            tableSize[1] = count2;
+            tableSize[1] = count2 - 1;
         }
         return tableSize;
     }
+
     public static boolean isNumeric(String strNum) {
         return strNum.matches("-?\\d+(\\.\\d+)?");
     }

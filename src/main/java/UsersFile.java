@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class UsersFile {
+    // Returns a list of chatid users from the users.txt text file
     public List<Long> getUsers() throws FileNotFoundException {
         File file = new File("users.txt");
 

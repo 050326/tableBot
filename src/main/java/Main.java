@@ -29,86 +29,49 @@ import java.util.Collections;
 import java.util.List;
 
 public class Main {
+
     private static Sheets sheetsService;
     private static String APPLICATION_NAME = "Google Sheets";
     private static String SPREADSHEET_ID = "ID";
 
     private static Credential authorize() throws IOException, GeneralSecurityException {
         InputStream in = Main.class.getResourceAsStream("/credentials.json");
-        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(
-                JacksonFactory.getDefaultInstance(), new InputStreamReader(in)
-        );
+        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JacksonFactory.getDefaultInstance(), new InputStreamReader(in));
         List<String> scopes = Arrays.asList(SheetsScopes.SPREADSHEETS);
 
-        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(),
-                clientSecrets, scopes)
-                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File("tokens")))
-                .setAccessType("offline")
-                .build();
-        Credential credential = new AuthorizationCodeInstalledApp(
-                flow, new LocalServerReceiver())
-                .authorize("user");
+        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(),clientSecrets, scopes).setDataStoreFactory(new FileDataStoreFactory(new java.io.File("tokens"))).setAccessType("offline").build();
+        Credential credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
         return credential;
     }
-
+    //returns sheetsService, with which you can get tables to which you have access on your google account
     public static Sheets getSheetsService() throws  IOException,GeneralSecurityException{
         Credential credential = authorize();
-        return new Sheets.Builder(GoogleNetHttpTransport.newTrustedTransport(),
-                JacksonFactory.getDefaultInstance(), credential)
-                .setApplicationName(APPLICATION_NAME)
-                .build();
+        return new Sheets.Builder(GoogleNetHttpTransport.newTrustedTransport(),JacksonFactory.getDefaultInstance(), credential).setApplicationName(APPLICATION_NAME).build();
     }
 
     public static void main(String[] args) throws IOException, GeneralSecurityException {
-        int tableSize[] = new int[2];
         sheetsService = getSheetsService();
         String range = "roman!A1:U200";
-
-        ValueRange response = sheetsService.spreadsheets().values()
-                .get(SPREADSHEET_ID, range)
-                .execute();
-
+        // Get a fragment of the table
+        ValueRange response = sheetsService.spreadsheets().values().get(SPREADSHEET_ID, range).execute();
+        // Get the value from the table
         List<List<Object>> values = response.getValues();
-        WorkWithTable wwt = new WorkWithTable();
-        tableSize = wwt.formattingTable(values);
 
-        if(values == null || values.isEmpty()){
-            System.out.println("NO DATA FOUND");
-        }else{
-            int count1 = 0;
-            for (List row : values) {
-                if (count1 < tableSize[0]) {
-                    int count2 = 0;
-                    for (Object cellue : row) {
-                        if (count2 < tableSize[1]) {
-                            System.out.print(cellue + " ");
-                        }
-                        count2++;
-                    }
-                    System.out.println();
-                }
-                count1++;
-            }
-        }
+        WorkWithTable wwt = new WorkWithTable();
+        // Dimensions of the filled table [0] - high, [1] - length
+        int tableSize[] = wwt.getTableSize(values);
+        // Time to complete tasks
         int timings[] = wwt.getTimings(values, tableSize[0]);
-        String statuses[] = wwt.getStatuses(values, tableSize[1]-1, tableSize[0]-2);
-        for (int  i :timings) {
-            System.out.println(i);
+        // Task execution status
+        String statuses[] = wwt.getStatuses(values, tableSize[1], tableSize[0]);
+        // Outputting data to the console
+        for(int i=0; i<timings.length; i++){
+            System.out.println("timing: " + timings[i] + " status: " + statuses[i]);
         }
-        System.out.println("---------------------------");
-        for (String i :statuses) {
-            System.out.println(i);
-        }
-        System.out.println("---------------------------");
-        System.out.println("Month:   "+wwt.getMonth(values, tableSize[1]));
+        System.out.println("Month: " + wwt.getMonth(values, tableSize[1]));
     }
 }
 
-
-
-//public class Main {
-//    public static void main(String[] args) {
 //        ApiContextInitializer.init();
 //        TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
 //        Timer time = new Timer();
@@ -119,5 +82,3 @@ public class Main {
 //        } catch (TelegramApiException e) {
 //            e.printStackTrace();
 //        }
-//    }
-//}
