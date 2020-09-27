@@ -1,10 +1,11 @@
 #folder IDEA files
 .idea/
 build/
+.gradle/
+gradle/
 #folder tokens
 tokens/
 #folder credential
 src/main/resources/
-#folder users file
-users.txt
+
 

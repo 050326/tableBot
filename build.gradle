@@ -1,24 +1,21 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.bmuschko.docker-remote-api' version '4.8.0'
 }
 
-mainClassName = 'Main'
-group 'org.example'
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-version '1.0'
+import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerStopContainer
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 
-task fatJar(type: Jar) {
-    manifest {
-        attributes 'Implementation-Title': 'Gradle Jar File Example',
-                'Implementation-Version': version,
-                'Main-Class': 'Main'
-    }
-    baseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
-}
+
+def dockerBuildDir = 'build/docker/'
+def imageVersion = '1.0'
+def uniqueContainerName = 'test_docker_plugin'
 
 repositories {
     mavenCentral()
@@ -30,3 +27,88 @@ dependencies {
     compile 'com.google.apis:google-api-services-sheets:v4-rev581-1.25.0'
     compile "org.telegram:telegrambots:4.9.1"
 }
+
+application {
+    mainClassName = 'Main'
+}
+
+jar {
+    doFirst {
+        from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    }
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+    manifest {
+        attributes 'Main-Class': 'Main'
+    }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+task createDockerfile(type: Dockerfile) {
+    destFile = project.file("$dockerBuildDir/Dockerfile")
+    from 'openjdk:8-jre-alpine'
+    copyFile jar.archiveName, '/app/test_service.jar'
+    entryPoint 'java'
+    defaultCommand '-jar', '/app/test_service.jar'
+    exposePort 8080
+    runCommand 'apk --update --no-cache add curl'
+    instruction 'HEALTHCHECK CMD curl -f http://localhost:8080/hello || exit 1'
+}
+
+task syncJar(type: Copy) {
+    dependsOn assemble
+    from jar.archivePath
+    into dockerBuildDir
+}
+
+task stopContainer(type: DockerStopContainer) {
+    targetContainerId("$uniqueContainerName")
+    onError { exc ->
+        if (exc.message!=null && !exc.message.contains('NotModifiedException')) {
+            throw new RuntimeException(exc)
+        }
+    }
+}
+
+task removeContainer(type: DockerRemoveContainer) {
+    //dependsOn stopContainer
+    targetContainerId("$uniqueContainerName")
+    onError { exc ->
+        if (exc.message!=null && !exc.message.contains('NotModifiedException')) {
+            throw new RuntimeException(exc)
+        }
+    }
+}
+
+task removeImage(type: DockerRemoveImage) {
+    //dependsOn removeContainer
+    targetImageId("adpashnin/gradle_docker_plugin:$imageVersion")
+    onError { exc ->
+        if (exc.message!=null && !exc.message.contains('NotModifiedException')) {
+            throw new RuntimeException(exc)
+        }
+    }
+}
+
+task buildImage(type: DockerBuildImage) {
+    dependsOn createDockerfile, syncJar
+    inputDir = project.file(dockerBuildDir)
+    tags = ["adpashnin/gradle_docker_plugin:$imageVersion"]
+}
+
+task createContainer(type: DockerCreateContainer) {
+    dependsOn buildImage//, removeContainer
+    targetImageId buildImage.getImageId()
+    containerName = "$uniqueContainerName"
+    portBindings = ['8080:8080']
+}
+
+task startContainer(type: DockerStartContainer) {
+    dependsOn createContainer
+    targetContainerId("$uniqueContainerName")
+}
+
+
+
