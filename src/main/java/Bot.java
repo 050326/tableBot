@@ -25,8 +25,7 @@ public class Bot extends TelegramLongPollingBot {
             //incoming message text and chat id
             String inputText = update.getMessage().getText().toLowerCase();
             long chatid = update.getMessage().getChatId();
-
-            //
+            
             if (inputText.equals("hi") || inputText.equals("hello") || inputText.equals("/start")) {
                 //-------creating and preparing for shipment message-------
                 //creating keyboard

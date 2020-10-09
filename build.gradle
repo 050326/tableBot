@@ -84,7 +84,7 @@ task removeContainer(type: DockerRemoveContainer) {
 
 task removeImage(type: DockerRemoveImage) {
     //dependsOn removeContainer
-    targetImageId("adpashnin/gradle_docker_plugin:$imageVersion")
+    targetImageId("table_bot:$imageVersion")
     onError { exc ->
         if (exc.message!=null && !exc.message.contains('NotModifiedException')) {
             throw new RuntimeException(exc)
@@ -95,7 +95,7 @@ task removeImage(type: DockerRemoveImage) {
 task buildImage(type: DockerBuildImage) {
     dependsOn createDockerfile, syncJar
     inputDir = project.file(dockerBuildDir)
-    tags = ["adpashnin/gradle_docker_plugin:$imageVersion"]
+    tags = ["table_bot:$imageVersion"]
 }
 
 task createContainer(type: DockerCreateContainer) {
