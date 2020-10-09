@@ -21,11 +21,10 @@ public class WorkWithTable {
     //With sheetsService you can get tables to which you have access on your google account
     private static Sheets sheetsService;
     private static String APPLICATION_NAME = "Google Sheets";
-    private static String SPREADSHEET_ID = "Sheets address";
     //Maximum number of lines
     private static int maxLines= 200;
 
-    public String[] getTasksForWeek(String namesOfTablesInput[]) throws IOException, GeneralSecurityException{
+    public String[] getTasksForWeek(String namesOfTablesInput[], String SPREADSHEET_ID) throws IOException, GeneralSecurityException{
         String[] TasksForWeek = new String[namesOfTablesInput.length];
         int date = 0;
         WorkWithTable wwt = new WorkWithTable();
@@ -250,7 +249,6 @@ public class WorkWithTable {
         InputStream in = Main.class.getResourceAsStream("/credentials.json");
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JacksonFactory.getDefaultInstance(), new InputStreamReader(in));
         List<String> scopes = Arrays.asList(SheetsScopes.SPREADSHEETS);
-
         GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(),clientSecrets, scopes).setDataStoreFactory(new FileDataStoreFactory(new java.io.File("tokens"))).setAccessType("offline").build();
         Credential credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
         return credential;
