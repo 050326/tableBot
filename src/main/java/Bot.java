@@ -14,7 +14,7 @@ import java.util.List;
 public class Bot extends TelegramLongPollingBot {
     final private String token = "0000000000:AAAAAAAAAAAAAAAAAAAAAAAAAAA";
     final private String botname = "BotsName";
-    private static String SPREADSHEET_ID = "Sheets address";
+    private static String SPREADSHEET_ID = "1rrrrrrrrrrrrr-iiiiIiiI-qQQ3qqQqQQQQ";
     //add new strings to add new tables
     private static String namesOfTables[] = {"katya", "admin", "roman", "tania", "asia"};
     List<Long> users;
